@@ -22,8 +22,14 @@ data Expr
   | Div Expr Expr
   deriving (Show, Eq)
 
--- recrExpr :: ... anotar el tipo ...
-recrExpr = error "COMPLETAR EJERCICIO 7"
+recrExpr :: (Float -> Float)-> --Const
+  (Float -> Float -> Float) -> --Rango
+    (Expr -> Expr -> Expr) ->  --Suma
+      (Expr -> Expr -> Expr) -> --Resta
+      (Expr -> Expr -> Expr) -> --Mult
+      (Expr -> Expr -> Expr) -> -- Div
+       Expr -> Float
+recrExpr f = 
 
 -- foldExpr :: ... anotar el tipo ...
 foldExpr = error "COMPLETAR EJERCICIO 7"
