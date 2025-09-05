@@ -22,17 +22,31 @@ data Expr
   | Div Expr Expr
   deriving (Show, Eq)
 
-recrExpr :: (Float -> Float)-> --Const
+recrExpr :: 
+recrExpr con cRango cSuma cResta cMult cDiv expr recr = case expr of
+                                                    Const c = con c
+                                                    Rango l u = cRango l u
+                                                    Suma q1 q2 = cSuma q1 q2 (rec q1) (rec q2)
+                                                    Resta q1 q2 = cResta (rec q1) (rec q2)
+                                                    Mult q1 q2 = cMult (rec q1) (rec q2)
+                                                    Div q1 q2 = cDiv (rec q1) (rec q2)
+                                                    where rec = recrExpr con cRango cSuma cResta cMult cDiv 
+
+foldExpr :: (Float -> Float)-> --Const
   (Float -> Float -> Float) -> --Rango
     (Expr -> Expr -> Expr) ->  --Suma
       (Expr -> Expr -> Expr) -> --Resta
       (Expr -> Expr -> Expr) -> --Mult
       (Expr -> Expr -> Expr) -> -- Div
        Expr -> Float
-recrExpr f = 
-
--- foldExpr :: ... anotar el tipo ...
-foldExpr = error "COMPLETAR EJERCICIO 7"
+foldExpr con cRango cSuma cResta cMult cDiv expr = case expr of
+                                                    Const c = con c
+                                                    Rango l u = cRango l u
+                                                    Suma q1 q2 = cSuma (rec q1) (rec q2)
+                                                    Resta q1 q2 = cResta (rec q1) (rec q2)
+                                                    Mult q1 q2 = cMult (rec q1) (rec q2)
+                                                    Div q1 q2 = cDiv (rec q1) (rec q2)
+                                                    where rec = foldExpr con cRango cSuma cResta cMult cDiv 
 
 -- | Evaluar expresiones dado un generador de números aleatorios
 eval :: Expr -> G Float
