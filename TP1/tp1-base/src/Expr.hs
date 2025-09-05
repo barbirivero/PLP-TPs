@@ -22,40 +22,79 @@ data Expr
   | Div Expr Expr
   deriving (Show, Eq)
 
-recrExpr :: 
-recrExpr con cRango cSuma cResta cMult cDiv expr recr = case expr of
-                                                    Const c = con c
-                                                    Rango l u = cRango l u
-                                                    Suma q1 q2 = cSuma q1 q2 (rec q1) (rec q2)
-                                                    Resta q1 q2 = cResta (rec q1) (rec q2)
-                                                    Mult q1 q2 = cMult (rec q1) (rec q2)
-                                                    Div q1 q2 = cDiv (rec q1) (rec q2)
-                                                    where rec = recrExpr con cRango cSuma cResta cMult cDiv 
+recrExpr :: (Float -> a)-> --Const
+  (Float -> Float -> a) -> --Rango
+    (Expr -> Expr ->  a -> a -> a) ->  --Suma
+      (Expr -> Expr -> a -> a -> a) -> --Resta
+      (Expr -> Expr -> a -> a -> a) -> --Mult
+      (Expr -> Expr -> a -> a -> a) -> -- Div
+       Expr -> a
+recrExpr cCon cRango cSuma cResta cMult cDiv expr = case expr of
+                                                    Const c -> cCon c
+                                                    Rango l u -> cRango l u
+                                                    Suma q1 q2 -> cSuma q1 q2 (rec q1) (rec q2)
+                                                    Resta q1 q2 -> cResta q1 q2 (rec q1) (rec q2)
+                                                    Mult q1 q2 -> cMult q1 q2 (rec q1) (rec q2)
+                                                    Div q1 q2 -> cDiv q1 q2 (rec q1) (rec q2)
+                                                    where rec = recrExpr cCon cRango cSuma cResta cMult cDiv
 
-foldExpr :: (Float -> Float)-> --Const
-  (Float -> Float -> Float) -> --Rango
-    (Expr -> Expr -> Expr) ->  --Suma
-      (Expr -> Expr -> Expr) -> --Resta
-      (Expr -> Expr -> Expr) -> --Mult
-      (Expr -> Expr -> Expr) -> -- Div
-       Expr -> Float
-foldExpr con cRango cSuma cResta cMult cDiv expr = case expr of
-                                                    Const c = con c
-                                                    Rango l u = cRango l u
-                                                    Suma q1 q2 = cSuma (rec q1) (rec q2)
-                                                    Resta q1 q2 = cResta (rec q1) (rec q2)
-                                                    Mult q1 q2 = cMult (rec q1) (rec q2)
-                                                    Div q1 q2 = cDiv (rec q1) (rec q2)
-                                                    where rec = foldExpr con cRango cSuma cResta cMult cDiv 
+foldExpr :: (Float -> a)-> --Const
+  (Float -> Float -> a) -> --Rango
+    (a -> a -> a) ->  --Suma
+      (a -> a -> a) -> --Resta
+      (a -> a -> a) -> --Mult
+      (a -> a -> a) -> -- Div
+       Expr -> a
+foldExpr cCon cRango cSuma cResta cMult cDiv expr = case expr of
+                                                    Const c -> cCon c
+                                                    Rango l u -> cRango l u
+                                                    Suma q1 q2 -> cSuma (rec q1) (rec q2)
+                                                    Resta q1 q2 -> cResta (rec q1) (rec q2)
+                                                    Mult q1 q2 -> cMult (rec q1) (rec q2)
+                                                    Div q1 q2 -> cDiv (rec q1) (rec q2)
+                                                    where rec = foldExpr cCon cRango cSuma cResta cMult cDiv
 
 -- | Evaluar expresiones dado un generador de números aleatorios
-eval :: Expr -> G Float
-eval = error "COMPLETAR EJERCICIO 8"
+eval :: Expr -> Gen -> (Float,Gen)
+eval expr g = (foldExpr cCon cRango cSuma cResta cMult cDiv expr) g
+  where
+    cCon :: Float -> (Gen -> (Float,Gen))
+    cCon c gen = (c, gen)
+
+    cRango :: Float -> Float -> (Gen -> (Float,Gen))
+    cRango l u gen = dameUno (l,u) gen
+
+    cSuma, cResta, cMult, cDiv :: (Gen -> (Float,Gen)) -> (Gen -> (Float,Gen)) -> (Gen -> (Float,Gen))
+
+    cSuma f1 f2 gen =
+      case f1 gen of
+        (v1,g1) -> case f2 g1 of
+          (v2,g2) -> (v1 + v2, g2)
+
+    cResta f1 f2 gen =
+      case f1 gen of
+        (v1,g1) -> case f2 g1 of
+          (v2,g2) -> (v1 - v2, g2)
+
+    cMult f1 f2 gen =
+      case f1 gen of
+        (v1,g1) -> case f2 g1 of
+          (v2,g2) -> (v1 * v2, g2)
+
+    cDiv f1 f2 gen =
+      case f1 gen of
+        (v1,g1) -> case f2 g1 of
+          (v2,g2) -> (v1 / v2, g2)
+
+
+
+--eval expr g = (foldExpr id (\a b-> fst (dameUno (a,b) g)) (+) (-) (*) (/) expr, snd (dameUno (1,2) g))
 
 -- | @armarHistograma m n f g@ arma un histograma con @m@ casilleros
 -- a partir del resultado de tomar @n@ muestras de @f@ usando el generador @g@.
 armarHistograma :: Int -> Int -> G Float -> G Histograma
-armarHistograma m n f g = error "COMPLETAR EJERCICIO 9"
+--armarHistograma :: Int -> Int -> Gen -> (Float,Gen) -> Gen -> (Histograma,Gen)
+armarHistograma m n f g = (histograma m (rango95 (fst (muestra f n g))) (fst (muestra f n g)), g)
 
 -- | @evalHistograma m n e g@ evalúa la expresión @e@ usando el generador @g@ @n@ veces
 -- devuelve un histograma con @m@ casilleros y rango calculado con @rango95@ para abarcar el 95% de confianza de los valores.
