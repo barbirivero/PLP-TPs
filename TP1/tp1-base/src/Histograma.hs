@@ -35,22 +35,22 @@ data Histograma = Histograma Float Float [Int]
 -- valores en el rango y 2 casilleros adicionales para los valores fuera del rango.
 -- Require que @l < u@ y @n >= 1@.
 vacio :: Int -> (Float, Float) -> Histograma
-vacio n (l, u) = Histograma l ((u-l)/fromIntegral n) (replicate (n+2) 0)
+vacio casilleros (rangoInferior, rangoSuperior) = Histograma rangoInferior ((rangoSuperior - rangoInferior)/fromIntegral casilleros) (replicate (casilleros+2) 0)
 
 -- | Agrega un valor al histograma.
 agregar :: Float -> Histograma -> Histograma
 --agregar x (Histograma l tamaño ys) = Histograma l tamaño (actualizarElem (floor (x/ (fromIntegral(length ys) * tamaño)+1)) (+1) ys)
-agregar x (Histograma l tam ys)
-  | x < l     = Histograma l tam (actualizarElem 0 (+1) ys)
-  | x >= l + tam * fromIntegral (length ys - 2) = Histograma l tam (actualizarElem (length ys - 1) (+1) ys)
+agregar valor (Histograma rangoInferior tam ys)
+  | valor < rangoInferior = Histograma rangoInferior tam (actualizarElem 0 (+1) ys)
+  | valor >= rangoInferior + tam * fromIntegral (length ys - 2) = Histograma rangoInferior tam (actualizarElem (length ys - 1) (+1) ys)
   | otherwise = 
-      let idx = 1 + floor ((x - l) / tam)
-      in Histograma l tam (actualizarElem idx (+1) ys)
+      let idx = 1 + floor ((valor - rangoInferior) / tam)
+      in Histograma rangoInferior tam (actualizarElem idx (+1) ys)
 
 
 -- | Arma un histograma a partir de una lista de números reales con la cantidad de casilleros y rango indicados.
 histograma :: Int -> (Float, Float) -> [Float] -> Histograma
-histograma n r xs = foldr  agregar (vacio n r) xs
+histograma casilleros rango xs = foldr  agregar (vacio casilleros rango) xs
 
 -- | Un `Casillero` representa un casillero del histograma con sus límites, cantidad y porcentaje.
 -- Invariante: Sea @Casillero m1 m2 c p@ entonces @m1 < m2@, @c >= 0@, @0 <= p <= 100@
@@ -76,15 +76,15 @@ casPorcentaje (Casillero _ _ _ p) = p
 -- | Dado un histograma, devuelve la lista de casilleros con sus límites, cantidad y porcentaje.
 
 minimos :: (Float,Float) -> [Int] -> [Float]
-minimos (l,u) xs = infinitoNegativo:[ (fromIntegral x*(u-l))+ l | x <- [0..length xs - 2]]
+minimos (rangoInferior,rangoSuperior) xs = infinitoNegativo:[ (fromIntegral x*(rangoSuperior-rangoInferior))+ rangoInferior | x <- [0..length xs - 2]]
 
 maximos :: (Float,Float) -> [Int] -> [Float]
-maximos (l,u) xs = l :[ (fromIntegral x*(u-l))+ u | x <- [0..length xs - 3]] ++ [infinitoPositivo]
+maximos (rangoInferior,rangoSuperior) xs = rangoInferior :[ (fromIntegral x*(rangoSuperior-rangoInferior))+ rangoSuperior | x <- [0..length xs - 3]] ++ [infinitoPositivo]
 
 porcentajes:: (Float,Float) -> [Int] -> [Float]
-porcentajes (l,u) xs = if sum xs == 0
+porcentajes _ xs = if sum xs == 0
                         then replicate (length xs) 0.0
                         else map (*100) (map (/ fromIntegral (sum xs)) (map fromIntegral xs))
 
 casilleros :: Histograma -> [Casillero]
-casilleros (Histograma n r xs) = zipWith4 Casillero (minimos (n,n+r) xs) (maximos (n,n+r) xs) xs (porcentajes (n,n+r) xs)
+casilleros (Histograma inicio rango xs) = zipWith4 Casillero (minimos (inicio,inicio+rango) xs) (maximos (inicio,inicio+rango) xs) xs (porcentajes (inicio,inicio+rango) xs)

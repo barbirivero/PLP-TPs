@@ -3,9 +3,9 @@ module Util where
 -- | @alinearDerecha n s@ agrega espacios a la izquierda de @s@ hasta que su longitud sea @n@.
 -- Si @s@ ya tiene longitud @>= n@, devuelve @s@.
 alinearDerecha :: Int -> String -> String
-alinearDerecha n s = if length s < n 
-                    then replicate (n - length s) ' ' ++ s 
-                    else s  
+alinearDerecha longitud string = if length string < longitud
+                    then replicate (longitud - length string) ' ' ++ string
+                    else string
 
 
 -- | Dado un índice y una función, actualiza el elemento en la posición del índice
@@ -14,11 +14,11 @@ alinearDerecha n s = if length s < n
 -- El primer elemento de la lista es el índice 0.
 
 actualizarElemOrdenCambiado :: (a -> a) -> [a] -> (Int -> [a])
-actualizarElemOrdenCambiado f = foldr (\x rec n -> if n == 0 then [f x] ++ rec (n-1) else x : rec (n-1))
+actualizarElemOrdenCambiado f = foldr (\x rec indice -> if indice == 0 then f x : rec (indice-1) else x : rec (indice-1))
                                         (const [])
 
 actualizarElem :: Int -> (a -> a) -> [a] -> [a]
-actualizarElem n f xs = actualizarElemOrdenCambiado f xs n
+actualizarElem indice f lista = actualizarElemOrdenCambiado f lista indice
 
 
 

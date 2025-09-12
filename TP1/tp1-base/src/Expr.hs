@@ -11,6 +11,8 @@ where
 
 import Generador
 import Histograma
+import Data.Data (ConstrRep(FloatConstr))
+import GHC.Exception (fromCallSiteList)
 
 -- | Expresiones aritméticas con rangos
 data Expr
@@ -56,35 +58,20 @@ foldExpr cCon cRango cSuma cResta cMult cDiv expr = case expr of
 
 -- | Evaluar expresiones dado un generador de números aleatorios
 eval :: Expr -> Gen -> (Float,Gen)
-eval expr g = (foldExpr cCon cRango cSuma cResta cMult cDiv expr) g
+eval expr = foldExpr cCon cRango (cFuncionOperacion (+)) (cFuncionOperacion (-)) (cFuncionOperacion (*)) (cFuncionOperacion (/)) expr
   where
     cCon :: Float -> (Gen -> (Float,Gen))
     cCon c gen = (c, gen)
 
     cRango :: Float -> Float -> (Gen -> (Float,Gen))
-    cRango l u gen = dameUno (l,u) gen
+    cRango rangoInferior rangoSuperior gen = dameUno (rangoInferior,rangoSuperior) gen
 
-    cSuma, cResta, cMult, cDiv :: (Gen -> (Float,Gen)) -> (Gen -> (Float,Gen)) -> (Gen -> (Float,Gen))
+    cFuncionOperacion :: (Float -> Float -> Float) -> (Gen -> (Float,Gen)) -> (Gen -> (Float,Gen)) -> (Gen -> (Float,Gen))
 
-    cSuma f1 f2 gen =
-      case f1 gen of
-        (v1,g1) -> case f2 g1 of
-          (v2,g2) -> (v1 + v2, g2)
-
-    cResta f1 f2 gen =
-      case f1 gen of
-        (v1,g1) -> case f2 g1 of
-          (v2,g2) -> (v1 - v2, g2)
-
-    cMult f1 f2 gen =
-      case f1 gen of
-        (v1,g1) -> case f2 g1 of
-          (v2,g2) -> (v1 * v2, g2)
-
-    cDiv f1 f2 gen =
-      case f1 gen of
-        (v1,g1) -> case f2 g1 of
-          (v2,g2) -> (v1 / v2, g2)
+    cFuncionOperacion funcion expr1 expr2 gen =
+      case expr1 gen of
+        (valorIzq,gen1) -> case expr2 gen1 of
+          (valorDer,gen2) -> (funcion valorIzq valorDer, gen2)
 
 
 
@@ -94,13 +81,17 @@ eval expr g = (foldExpr cCon cRango cSuma cResta cMult cDiv expr) g
 -- a partir del resultado de tomar @n@ muestras de @f@ usando el generador @g@.
 armarHistograma :: Int -> Int -> G Float -> G Histograma
 --armarHistograma :: Int -> Int -> Gen -> (Float,Gen) -> Gen -> (Histograma,Gen)
-armarHistograma m n f g = (histograma m (rango95 (fst (muestra f n g))) (fst (muestra f n g)), g)
+armarHistograma casilleros muestras f gen = (histograma casilleros (rango95 listaDeFloats) listaDeFloats, generadorNuevo)
+    where (listaDeFloats,generadorNuevo) = muestra f muestras gen
+
+
 
 -- | @evalHistograma m n e g@ evalúa la expresión @e@ usando el generador @g@ @n@ veces
 -- devuelve un histograma con @m@ casilleros y rango calculado con @rango95@ para abarcar el 95% de confianza de los valores.
 -- @n@ debe ser mayor que 0.
 evalHistograma :: Int -> Int -> Expr -> G Histograma
-evalHistograma m n expr = error "COMPLETAR EJERCICIO 10"
+evalHistograma casilleros muestras expr = armarHistograma casilleros muestras (eval expr)
+
 
 -- Podemos armar histogramas que muestren las n evaluaciones en m casilleros.
 -- >>> evalHistograma 11 10 (Suma (Rango 1 5) (Rango 100 105)) (genNormalConSemilla 0)
@@ -112,7 +103,48 @@ evalHistograma m n expr = error "COMPLETAR EJERCICIO 10"
 -- | Mostrar las expresiones, pero evitando algunos paréntesis innecesarios.
 -- En particular queremos evitar paréntesis en sumas y productos anidados.
 mostrar :: Expr -> String
-mostrar = error "COMPLETAR EJERCICIO 11"
+mostrar = recrExpr
+  (\c -> show c)                    -- Const
+  (\l u -> show l ++ "~" ++ show u) -- Rango
+  (operacion " + ")
+  (operacion " - ")
+  (operacion " * ")
+  (operacion " / ")
+  where
+    operacion string expr1 expr2 string1 string2  =
+        let izquierda  = maybeParen (necesitaParentesis (constructor expr1 , string)) string1
+            derecha = maybeParen (necesitaParentesis (constructor expr2 , string)) string2
+        in izquierda ++ string ++ derecha
+
+    necesitaParentesis:: (ConstructorExpr , String) -> Bool
+    necesitaParentesis (constructor , string) =
+        case constructor of
+        CEConst -> False
+        CERango -> False
+        CESuma -> case string of
+          " * " -> True
+          " / " -> True
+          " - " -> False
+          " + " -> False
+        CEResta -> case string of
+          " * " -> True
+          " / " -> True
+          " - " -> True
+          " + " -> False
+        CEMult -> case string of
+          " * " -> False
+          " / " -> False
+          " - " -> True
+          " + " -> True
+        CEDiv -> case string of
+          " * " -> False
+          " / " -> False
+          " - " -> True
+          " + " -> True
+
+    
+
+
 
 data ConstructorExpr = CEConst | CERango | CESuma | CEResta | CEMult | CEDiv
   deriving (Show, Eq)

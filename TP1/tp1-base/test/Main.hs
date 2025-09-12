@@ -28,9 +28,9 @@ allTests =
       "Ej 7 - Expr.recrExpr" ~: testsRecr,
       "Ej 7 - Expr.foldExpr" ~: testsFold,
       "Ej 8 - Expr.eval" ~: testsEval,
-      --"Ej 9 - Expr.armarHistograma" ~: testsArmarHistograma,
-      --"Ej 10 - Expr.evalHistograma" ~: testsEvalHistograma,
-      --"Ej 11 - Expr.mostrar" ~: testsMostrar,
+      "Ej 9 - Expr.armarHistograma" ~: testsArmarHistograma,
+      "Ej 10 - Expr.evalHistograma" ~: testsEvalHistograma,
+      "Ej 11 - Expr.mostrar" ~: testsMostrar,
       "Expr.Parser.parse" ~: testsParse,
       "App.mostrarFloat" ~: testsMostrarFloat,
       "App.mostrarHistograma" ~: testsMostrarHistograma
@@ -172,13 +172,16 @@ testsEval =
 
 testsArmarHistograma :: Test
 testsArmarHistograma =
-  test
-    [fst (armarHistograma 10 10000 (dameUno (1, 5)) (genNormalConSemilla 0)) ~?= histograma 4 (1, 5) [1, 2, 3]]
+  test  [ completar
+  ]
+
+
+
 
 testsEvalHistograma :: Test
 testsEvalHistograma =
-  test
-    [completar]
+  test    [ completar
+  ]
 
 testsParse :: Test
 testsParse =
