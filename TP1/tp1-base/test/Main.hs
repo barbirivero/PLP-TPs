@@ -8,6 +8,7 @@ import Generador
 import Histograma
 import Test.HUnit
 import Util
+import System.Random (genByteString)
 
 main :: IO ()
 main = runTestTTAndExit allTests
@@ -172,15 +173,75 @@ testsEval =
 
 testsArmarHistograma :: Test
 testsArmarHistograma =
-  test  [ completar
-  ]
+  let  histograma_grande_semilla10 = fst(armarHistograma 10 100 (dameUno (1, 5)) (genNormalConSemilla 10))
+       histograma_grande_fijo = fst(armarHistograma 10 100 (dameUno (1, 5)) genFijo)
+
+       histograma_chico_semilla20 = fst(armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 20))
+       histograma_chico_semilla10 = fst(armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 10))
+       histograma_chico_fijo = fst(armarHistograma 3 100 (dameUno (1, 5)) genFijo)
+   in
+  test  
+    [ length (casilleros histograma_grande_semilla10) ~?= 12,
+      length (casilleros histograma_grande_fijo) ~?= 12,
 
 
+      length (casilleros histograma_chico_fijo) ~?= 5,
+      length (casilleros histograma_chico_semilla10) ~?= 5,
+      length (casilleros histograma_chico_semilla20) ~?= length (casilleros histograma_chico_semilla10),
 
+      totalEnCasilleros histograma_chico_fijo ~?= 100, 
+      totalEnCasilleros histograma_chico_semilla10 ~?= 100,
+      totalEnCasilleros histograma_chico_semilla20 ~?= 100,
+      totalEnCasilleros histograma_grande_fijo ~?= 100,
+      totalEnCasilleros histograma_grande_semilla10 ~?= 100,
+
+      sumaDePorcentajes (casilleros histograma_chico_fijo) ~?= 100.0,
+      sumaDePorcentajes (casilleros histograma_chico_semilla10) ~?= 100.0,
+      sumaDePorcentajes (casilleros histograma_chico_semilla20) ~?= 100.0,
+      sumaDePorcentajes (casilleros histograma_grande_fijo) ~?= 100.0,
+      sumaDePorcentajes (casilleros histograma_grande_semilla10) ~?= 100.0,
+
+      unCasilleroConTodo (casilleros histograma_chico_fijo) ~?= True,
+      unCasilleroConTodo (casilleros histograma_grande_fijo) ~?= True,
+      unCasilleroConTodo (casilleros histograma_chico_semilla10) ~?= False,
+      unCasilleroConTodo (casilleros histograma_chico_semilla20) ~?= False,
+      unCasilleroConTodo (casilleros histograma_grande_semilla10) ~?= False,
+
+
+      let (h,_) = armarHistograma 3 5 (dameUno (2, 6)) genFijo in
+      casilleros h ~?= [ Casillero infinitoNegativo 3.0 0 0.0,
+                         Casillero 3.0 3.6666667 0 0.0,
+                         Casillero 3.6666667 4.3333335 5 100.0,
+                         Casillero 4.3333335 5.0 0 0.0,
+                         Casillero 5.0 infinitoPositivo 0 0.0
+                       ],
+
+      let (h,_) = armarHistograma 10 100 (dameUno (2, 6)) genFijo in
+      casilleros h ~?= [ Casillero infinitoNegativo 3.0 0 0.0,
+                         Casillero 3.0 3.2 0 0.0,
+                         Casillero 3.2 3.4 0 0.0,
+                         Casillero 3.4 3.6000001 0 0.0,
+                         Casillero 3.6000001 3.8000002 0 0.0,
+                         Casillero 3.8000002 4.0 0 0.0,
+                         Casillero 4.0 4.2000003 100 100.0,
+                         Casillero 4.2000003 4.4000006 0 0.0,
+                         Casillero 4.4000006 4.6000004 0 0.0,
+                         Casillero 4.6000004 4.8 0 0.0,
+                         Casillero 4.8 5.0000005 0 0.0,
+                         Casillero 5.0000005 infinitoPositivo 0 0.0
+                       ]
+    ]
 
 testsEvalHistograma :: Test
 testsEvalHistograma =
-  test    [ completar
+  test    [
+      let (h,_) = evalHistograma 3 5 (Suma (Rango 1 5) (Const 1)) genFijo in
+      casilleros h ~?= [ Casillero infinitoNegativo 3.0 0 0.0,
+                         Casillero 3.0 3.6666667 0 0.0,
+                         Casillero 3.6666667 4.3333335 5 100.0,
+                         Casillero 4.3333335 5.0 0 0.0,
+                         Casillero 5.0 infinitoPositivo 0 0.0
+                       ]
   ]
 
 testsParse :: Test
