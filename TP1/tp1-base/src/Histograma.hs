@@ -23,6 +23,9 @@ module Histograma
     casCantidad,
     casPorcentaje,
     casilleros,
+    totalEnCasilleros,
+    sumaDePorcentajes,
+    unCasilleroConTodo
   )
 where
 
@@ -88,3 +91,13 @@ porcentajes _ xs = if sum xs == 0
 
 casilleros :: Histograma -> [Casillero]
 casilleros (Histograma inicio rango xs) = zipWith4 Casillero (minimos (inicio,inicio+rango) xs) (maximos (inicio,inicio+rango) xs) xs (porcentajes (inicio,inicio+rango) xs)
+
+--Funcion auxiliar que devuelve la cantidad total de elementos en los casilleros de un histograma
+totalEnCasilleros :: Histograma -> Int
+totalEnCasilleros = sum . map casCantidad . casilleros
+
+sumaDePorcentajes :: [Casillero] -> Float
+sumaDePorcentajes = sum . map casPorcentaje
+
+unCasilleroConTodo :: [Casillero] -> Bool
+unCasilleroConTodo cs = length (filter (\c -> casPorcentaje c == 100.0) cs) == 1
