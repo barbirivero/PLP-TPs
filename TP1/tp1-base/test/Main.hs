@@ -173,14 +173,14 @@ testsEval =
 
 testsArmarHistograma :: Test
 testsArmarHistograma =
-  let  histograma_grande_semilla10 = fst(armarHistograma 10 100 (dameUno (1, 5)) (genNormalConSemilla 10))
-       histograma_grande_fijo = fst(armarHistograma 10 100 (dameUno (1, 5)) genFijo)
+  let  histograma_grande_semilla10 = fst (armarHistograma 10 100 (dameUno (1, 5)) (genNormalConSemilla 10))
+       histograma_grande_fijo = fst (armarHistograma 10 100 (dameUno (1, 5)) genFijo)
 
-       histograma_chico_semilla20 = fst(armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 20))
-       histograma_chico_semilla10 = fst(armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 10))
-       histograma_chico_fijo = fst(armarHistograma 3 100 (dameUno (1, 5)) genFijo)
+       histograma_chico_semilla20 = fst (armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 20))
+       histograma_chico_semilla10 = fst (armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 10))
+       histograma_chico_fijo = fst (armarHistograma 3 100 (dameUno (1, 5)) genFijo)
    in
-  test  
+  test
     [ length (casilleros histograma_grande_semilla10) ~?= 12,
       length (casilleros histograma_grande_fijo) ~?= 12,
 
@@ -189,7 +189,7 @@ testsArmarHistograma =
       length (casilleros histograma_chico_semilla10) ~?= 5,
       length (casilleros histograma_chico_semilla20) ~?= length (casilleros histograma_chico_semilla10),
 
-      totalEnCasilleros histograma_chico_fijo ~?= 100, 
+      totalEnCasilleros histograma_chico_fijo ~?= 100,
       totalEnCasilleros histograma_chico_semilla10 ~?= 100,
       totalEnCasilleros histograma_chico_semilla20 ~?= 100,
       totalEnCasilleros histograma_grande_fijo ~?= 100,
@@ -234,8 +234,29 @@ testsArmarHistograma =
 
 testsEvalHistograma :: Test
 testsEvalHistograma =
+  let  eval_sinRangos_semilla10 =  evalHistograma 3 5 (Suma (Const 2) (Const 1)) (genNormalConSemilla 10)
+       eval_sinRangos_fijo =  evalHistograma 3 5 (Suma (Const 2) (Const 1)) genFijo
+       
+       eval_sumaRangos_semilla10 =  evalHistograma 3 5 (Suma (Rango 1 5) (Rango 2 5)) (genNormalConSemilla 10)
+       eval_sumaRangosInvertidos_semilla10 =  evalHistograma 3 5 (Suma (Rango 2 5) (Rango 1 5)) (genNormalConSemilla 10)
+       eval_chico_semilla20 = evalHistograma 3 5 (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 20)
+       eval_chico_fijo =  evalHistograma 3 5 (Suma (Rango 1 5) (Const 1)) genFijo
+   in
   test    [
-      let (h,_) = evalHistograma 3 5 (Suma (Rango 1 5) (Const 1)) genFijo in
+      length (casilleros (fst eval_sinRangos_semilla10)) ~?= length (casilleros (fst eval_sinRangos_fijo)),
+      casilleros (fst eval_sinRangos_semilla10) ~?= casilleros (fst eval_sinRangos_fijo), --Sin rangos no hay elemenots aleatorios
+
+      length (casilleros (fst eval_sumaRangos_semilla10)) ~?= length (casilleros (fst eval_sumaRangosInvertidos_semilla10)), --Misma Longitud
+      False ~?= casilleros (fst eval_sumaRangos_semilla10) == casilleros (fst eval_sumaRangosInvertidos_semilla10), -- El orden de los rangos afecta el resultado
+
+      totalEnCasilleros (fst eval_chico_semilla20) ~?= 5,
+      totalEnCasilleros (fst eval_chico_fijo) ~?= 5,
+      False ~?= casilleros (fst eval_chico_semilla20) == casilleros (fst eval_chico_fijo), -- Distintas semillas, distintos resultados
+
+      unCasilleroConTodo (casilleros (fst eval_chico_fijo)) ~?= True, --Semilla fija no hay variacion
+      unCasilleroConTodo (casilleros (fst eval_sinRangos_fijo)) ~?= True,
+
+      let (h,_) = eval_chico_fijo in
       casilleros h ~?= [ Casillero infinitoNegativo 3.0 0 0.0,
                          Casillero 3.0 3.6666667 0 0.0,
                          Casillero 3.6666667 4.3333335 5 100.0,
