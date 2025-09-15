@@ -239,6 +239,7 @@ testsEvalHistograma =
        
        eval_sumaRangos_semilla10 =  evalHistograma 3 5 (Suma (Rango 1 5) (Rango 2 5)) (genNormalConSemilla 10)
        eval_sumaRangosInvertidos_semilla10 =  evalHistograma 3 5 (Suma (Rango 2 5) (Rango 1 5)) (genNormalConSemilla 10)
+       
        eval_chico_semilla20 = evalHistograma 3 5 (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 20)
        eval_chico_fijo =  evalHistograma 3 5 (Suma (Rango 1 5) (Const 1)) genFijo
    in
