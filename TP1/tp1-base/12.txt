@@ -1,0 +1,24 @@
+Queremos ver que: ∀ e : : Expr cantLit e = S cantOp(e)
+P(e) = cantLit e = S cantOp(e)
+
+Hacemos induccion en la expresion:
+
+CB: e = Const a 			cantLit (Const a) = S cantOp(Const a)
+
+izq--> por {L1} S Z
+der--> por {O1} S (Z) 		podemos ver que se cumple la igualdad, asi que se cumple este caso base
+
+
+e = Rango a b			cantLit (Rango a b) = S cantOp(Rango a b)
+
+izq--> por {L2} S Z
+der--> por {O2} S (Z) 		podemos ver que se cumple la igualdad, asi que se cumple este otro caso base
+
+PI: 	e = Suma a b			HI: cantLit a = S cantOp(a) ∧
+						      cantLit b = S cantOp(b)
+
+QVQ			cantLit (Suma a b) = S cantOp(Suma a b)
+
+izq--> por {L3} suma (cantLit a) (cantLit b)
+der--> por {O3} S(S(Suma (cantOp a) (cantOp(b)))) --> por {S2} aplicada dos veces ≡  suma (S(cantOp a)) (S(cantOp b))  --> Por HI ≡ suma (cantLit a) (cantLit b) 
+Podemos ver la igualdad entre izquierda y derecha entonces queda demostrado el caso de Suma _ _ 
