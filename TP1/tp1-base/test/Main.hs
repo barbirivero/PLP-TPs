@@ -17,6 +17,15 @@ main = runTestTTAndExit allTests
 completar :: (HasCallStack) => Test
 completar = TestCase (assertFailure "COMPLETAR")
 
+totalEnCasilleros :: Histograma -> Int
+totalEnCasilleros = sum . map casCantidad . casilleros
+
+sumaDePorcentajes :: [Casillero] -> Float
+sumaDePorcentajes = sum . map casPorcentaje
+
+unCasilleroConTodo :: [Casillero] -> Bool
+unCasilleroConTodo cs = length (filter (\c -> casPorcentaje c == 100.0) cs) == 1
+
 allTests :: Test
 allTests =
   test
@@ -176,36 +185,37 @@ testsArmarHistograma =
   let  histograma_grande_semilla10 = fst (armarHistograma 10 100 (dameUno (1, 5)) (genNormalConSemilla 10))
        histograma_grande_fijo = fst (armarHistograma 10 100 (dameUno (1, 5)) genFijo)
 
-       histograma_chico_semilla20 = fst (armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 20))
-       histograma_chico_semilla10 = fst (armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 10))
        histograma_chico_fijo = fst (armarHistograma 3 100 (dameUno (1, 5)) genFijo)
+       histograma_chico_semilla10 = fst (armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 10))
+       histograma_chico_semilla20 = fst (armarHistograma 3 100 (dameUno (1, 5)) (genNormalConSemilla 20))
    in
   test
     [ length (casilleros histograma_grande_semilla10) ~?= 12,
+      totalEnCasilleros histograma_grande_semilla10 ~?= 100,
+      sumaDePorcentajes (casilleros histograma_grande_semilla10) ~?= 100.0,
+      unCasilleroConTodo (casilleros histograma_grande_semilla10) ~?= False,
+      
+      
       length (casilleros histograma_grande_fijo) ~?= 12,
-
+      totalEnCasilleros histograma_grande_fijo ~?= 100,
+      sumaDePorcentajes (casilleros histograma_grande_fijo) ~?= 100.0,
+      unCasilleroConTodo (casilleros histograma_grande_fijo) ~?= True,
 
       length (casilleros histograma_chico_fijo) ~?= 5,
-      length (casilleros histograma_chico_semilla10) ~?= 5,
-      length (casilleros histograma_chico_semilla20) ~?= length (casilleros histograma_chico_semilla10),
-
       totalEnCasilleros histograma_chico_fijo ~?= 100,
-      totalEnCasilleros histograma_chico_semilla10 ~?= 100,
-      totalEnCasilleros histograma_chico_semilla20 ~?= 100,
-      totalEnCasilleros histograma_grande_fijo ~?= 100,
-      totalEnCasilleros histograma_grande_semilla10 ~?= 100,
-
       sumaDePorcentajes (casilleros histograma_chico_fijo) ~?= 100.0,
-      sumaDePorcentajes (casilleros histograma_chico_semilla10) ~?= 100.0,
-      sumaDePorcentajes (casilleros histograma_chico_semilla20) ~?= 100.0,
-      sumaDePorcentajes (casilleros histograma_grande_fijo) ~?= 100.0,
-      sumaDePorcentajes (casilleros histograma_grande_semilla10) ~?= 100.0,
-
       unCasilleroConTodo (casilleros histograma_chico_fijo) ~?= True,
-      unCasilleroConTodo (casilleros histograma_grande_fijo) ~?= True,
+
+      length (casilleros histograma_chico_semilla10) ~?= 5,
+      totalEnCasilleros histograma_chico_semilla10 ~?= 100,
+      sumaDePorcentajes (casilleros histograma_chico_semilla10) ~?= 100.0,
       unCasilleroConTodo (casilleros histograma_chico_semilla10) ~?= False,
+
+
+      length (casilleros histograma_chico_semilla20) ~?= length (casilleros histograma_chico_semilla10),     
+      totalEnCasilleros histograma_chico_semilla20 ~?= 100,      
+      sumaDePorcentajes (casilleros histograma_chico_semilla20) ~?= 100.0,
       unCasilleroConTodo (casilleros histograma_chico_semilla20) ~?= False,
-      unCasilleroConTodo (casilleros histograma_grande_semilla10) ~?= False,
 
 
       let (h,_) = armarHistograma 3 5 (dameUno (2, 6)) genFijo in
