@@ -9,6 +9,7 @@ import Histograma
 import Test.HUnit
 import Util
 import System.Random (genByteString)
+import GHC.Read (list)
 
 main :: IO ()
 main = runTestTTAndExit allTests
@@ -25,6 +26,9 @@ sumaDePorcentajes = sum . map casPorcentaje
 
 unCasilleroConTodo :: [Casillero] -> Bool
 unCasilleroConTodo cs = length (filter (\c -> casPorcentaje c == 100.0) cs) == 1
+
+listaDeNumerosEnExpresion :: Expr -> [Float]
+listaDeNumerosEnExpresion = foldExpr (\x -> [x]) (\_ _ -> []) (++) (++) (++) (++)
 
 allTests :: Test
 allTests =
@@ -158,16 +162,79 @@ testsCasilleros =
 
 testsRecr :: Test
 testsRecr =
+  let sumaUnoA = Suma (Const 1.0)
+      restaUnoA = Resta (Const 1.0)
+      mult2y3 = Mult (Const 2.0) (Const 3.0)
+      div6y3 = Div (Const 6.0) (Const 3.0)
+
+      fRangoNula = (\_ _ -> 0)
+      fSuma = (\_ _ x y -> x + y)
+      fResta = (\_ _ x y -> x - y)
+      fMulti = (\_ _ x y -> x * y)
+      fDiv = (\_ _ x y -> x / y)
+
+      fSumaConRec ex ey x y = fst (eval ex (genNormalConSemilla 0)) + fst (eval ey (genNormalConSemilla 0)) + x + y
+      fRestaConRec ex ey x y = fst (eval ex (genNormalConSemilla 0)) - fst (eval ey (genNormalConSemilla 0)) + x - y
+      fMultiConRec ex ey x y = fst (eval ex (genNormalConSemilla 0)) * fst (eval ey (genNormalConSemilla 0)) + x * y
+      fDivConRec ex ey x y = fst (eval ex (genNormalConSemilla 0)) / fst (eval ey (genNormalConSemilla 0)) + x / y
+
+
+   in
   test
     [
-      recrExpr id (\_ _ -> 0) (\_ _ x y -> x + y) (\_ _ x y -> x - y) (\_ _ x y -> x * y) (\_ _ x y -> x / y) (Suma (Const 1.0) (Mult (Const 2.0) (Const 3.0))) ~?= 7.0
+    recrExpr id fRangoNula fSuma fResta fMulti fDiv (sumaUnoA mult2y3) ~?= 7.0,
+    recrExpr id fRangoNula fSuma fResta fMulti fDiv (restaUnoA mult2y3) ~?= -5.0,
+    recrExpr id fRangoNula fSuma fResta fMulti fDiv mult2y3 ~?= 6.0,
+    recrExpr id fRangoNula fSuma fResta fMulti fDiv div6y3 ~?= 2.0,
+
+    --Rango
+    recrExpr id (\x _ -> x) fSuma fResta fMulti fDiv (Mult (Rango 2 6) (Const 6.0)) ~?= 12.0,
+    recrExpr id (\_ y -> y) fSuma fResta fMulti fDiv (Mult (Rango 2 6) (Const 6.0)) ~?= 36.0,
+    recrExpr id (\x y -> (x + y) / 2) fSuma fResta fMulti fDiv (Mult (Rango 2 6) (Const 6.0)) ~?= 24.0,
+
+    -- Invertidos
+    recrExpr id (\_ _ -> 0) fResta fSuma fMulti fDiv (sumaUnoA mult2y3) ~?= -5.0,
+    recrExpr id (\_ _ -> 0) fResta fSuma fMulti fDiv (restaUnoA mult2y3) ~?= 7.0,
+    recrExpr id (\_ _ -> 0) fSuma fResta fDiv fMulti mult2y3 ~?= 0.6666667,
+    recrExpr id (\_ _ -> 0) fSuma fResta fDiv fMulti div6y3 ~?= 18.0,
+
+    -- Usando el cuerpo de la recursión para obtener la suma de las cuentas
+    recrExpr id (\_ _ -> 0) fSumaConRec fResta fMulti fDiv (sumaUnoA mult2y3) ~?= 14.0,
+    recrExpr id (\_ _ -> 0) fSuma fRestaConRec fMulti fDiv (restaUnoA mult2y3) ~?= -10.0,
+    recrExpr id (\_ _ -> 0) fSuma fResta fMultiConRec fDiv mult2y3 ~?= 12.0,
+    recrExpr id (\_ _ -> 0) fSuma fResta fMulti fDivConRec div6y3 ~?= 4.0
     ]
 
 testsFold :: Test
 testsFold =
+  let sumaUnoA = Suma (Const 1.0)
+      restaUnoA = Resta (Const 1.0)
+      mult2y3 = Mult (Const 2.0) (Const 3.0)
+      div6y3 = Div (Const 6.0) (Const 3.0)
+
+
+
+   in
   test
     [
-    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) (Suma (Const 1.0) (Mult (Const 2.0) (Const 3.0))) ~?= 7.0
+    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) (sumaUnoA mult2y3) ~?= 7.0,
+    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) (restaUnoA mult2y3) ~?= -5.0,
+    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) mult2y3 ~?= 6.0,
+    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) div6y3 ~?= 2.0,
+
+    --Rango
+    foldExpr id (\x _ -> x) (+) (-) (*) (/) (Mult (Rango 2 6) (Const 6.0)) ~?= 12.0,
+    foldExpr id (\_ y -> y) (+) (-) (*) (/) (Mult (Rango 2 6) (Const 6.0)) ~?= 36.0,
+    foldExpr id (\x y -> (x + y) / 2) (+) (-) (*) (/) (Mult (Rango 2 6) (Const 6.0)) ~?= 24.0,
+
+    -- Invertidos
+    foldExpr id (\_ _ -> 0) (-) (+) (*) (/) (sumaUnoA mult2y3) ~?= -5.0,
+    foldExpr id (\_ _ -> 0) (-) (+) (*) (/) (restaUnoA mult2y3) ~?= 7.0,
+    foldExpr id (\_ _ -> 0) (+) (-) (/) (*) mult2y3 ~?= 0.6666667,
+    foldExpr id (\_ _ -> 0) (+) (-) (/) (*) div6y3 ~?= 18.0,
+
+    listaDeNumerosEnExpresion (restaUnoA div6y3) ~?= [1.0,6.0,3.0],
+    listaDeNumerosEnExpresion (sumaUnoA (Suma (Const 2) (Const 3))) ~?= [1.0,2.0,3.0]
 
     ]
 
@@ -194,8 +261,8 @@ testsArmarHistograma =
       totalEnCasilleros histograma_grande_semilla10 ~?= 100,
       sumaDePorcentajes (casilleros histograma_grande_semilla10) ~?= 100.0,
       unCasilleroConTodo (casilleros histograma_grande_semilla10) ~?= False,
-      
-      
+
+
       length (casilleros histograma_grande_fijo) ~?= 12,
       totalEnCasilleros histograma_grande_fijo ~?= 100,
       sumaDePorcentajes (casilleros histograma_grande_fijo) ~?= 100.0,
@@ -212,8 +279,8 @@ testsArmarHistograma =
       unCasilleroConTodo (casilleros histograma_chico_semilla10) ~?= False,
 
 
-      length (casilleros histograma_chico_semilla20) ~?= length (casilleros histograma_chico_semilla10),     
-      totalEnCasilleros histograma_chico_semilla20 ~?= 100,      
+      length (casilleros histograma_chico_semilla20) ~?= length (casilleros histograma_chico_semilla10),
+      totalEnCasilleros histograma_chico_semilla20 ~?= 100,
       sumaDePorcentajes (casilleros histograma_chico_semilla20) ~?= 100.0,
       unCasilleroConTodo (casilleros histograma_chico_semilla20) ~?= False,
 
@@ -246,10 +313,10 @@ testsEvalHistograma :: Test
 testsEvalHistograma =
   let  eval_sinRangos_semilla10 =  evalHistograma 3 5 (Suma (Const 2) (Const 1)) (genNormalConSemilla 10)
        eval_sinRangos_fijo =  evalHistograma 3 5 (Suma (Const 2) (Const 1)) genFijo
-       
+
        eval_sumaRangos_semilla10 =  evalHistograma 3 5 (Suma (Rango 1 5) (Rango 2 5)) (genNormalConSemilla 10)
        eval_sumaRangosInvertidos_semilla10 =  evalHistograma 3 5 (Suma (Rango 2 5) (Rango 1 5)) (genNormalConSemilla 10)
-       
+
        eval_chico_semilla20 = evalHistograma 3 5 (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 20)
        eval_chico_fijo =  evalHistograma 3 5 (Suma (Rango 1 5) (Const 1)) genFijo
    in
