@@ -241,10 +241,42 @@ testsFold =
 testsEval :: Test
 testsEval =
   test
-    [ fst (eval (Suma (Rango 1 5) (Const 1)) genFijo) ~?= 4.0,
-      fst (eval (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 0)) ~?= 3.7980492,
+    [
+      fst (eval (Rango 1 5) genFijo) ~?= 3.0,
+      fst (eval (Rango 2 10) genFijo) ~?= 6.0,
+      fst (eval (Rango 1 5) (genNormalConSemilla 0)) ~?= 2.7980492,
+      fst (eval (Rango 1 5) (genNormalConSemilla 10)) ~?= 2.178496,
+      fst (eval (Rango 1 5) (genNormalConSemilla 20)) ~?= 2.9627423,
+      fst (eval (Rango 2 10) (genNormalConSemilla 20)) ~?= 5.9254847,
+
       -- el primer rango evalua a 2.7980492 y el segundo a 3.1250308
-      fst (eval (Suma (Rango 1 5) (Rango 1 5)) (genNormalConSemilla 0)) ~?= 5.92308
+      fst (eval (Suma (Rango 1 5) (Rango 1 5)) (genNormalConSemilla 0)) ~?= 5.92308,
+
+
+      fst (eval (Suma (Rango 1 5) (Const 1)) genFijo) ~?= 4.0,
+      fst (eval (Suma (Const 1) (Rango 1 5)) genFijo) ~?= 4.0,
+      fst (eval (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 0)) ~?= 3.7980492,
+      fst (eval (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 10)) ~?= 3.178496,
+      fst (eval (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 20)) ~?= 3.9627423,
+      
+
+      fst (eval (Resta (Rango 1 5) (Const 1)) genFijo) ~?= 2.0,
+      fst (eval (Resta (Const 1) (Rango 1 5)) genFijo) ~?= -2.0,
+      fst (eval (Resta (Rango 1 5) (Rango 1 5)) (genNormalConSemilla 0)) ~?= -0.32698154,
+      fst (eval (Resta (Rango 1 5) (Const 1)) (genNormalConSemilla 10)) ~?= 1.1784959,
+      fst (eval (Resta (Rango 1 5) (Const 1)) (genNormalConSemilla 20)) ~?= 1.9627423,
+
+      fst (eval (Mult (Rango 1 5) (Const 2)) genFijo) ~?= 6.0,
+      fst (eval (Mult (Const 2) (Rango 1 5)) genFijo) ~?= 6.0,
+      fst (eval (Mult (Rango 1 5) (Rango 1 5)) genFijo) ~?= 9.0,
+      fst (eval (Mult (Rango 1 5) (Const 2)) (genNormalConSemilla 10)) ~?= 4.356992,
+      fst (eval (Mult (Rango 1 5) (Const 2)) (genNormalConSemilla 20)) ~?= 5.9254847,
+
+      fst (eval (Div (Rango 2 10) (Const 2)) genFijo) ~?= 3.0,
+      fst (eval (Div (Const 2) (Rango 2 10)) genFijo) ~?= 0.33333334,
+      fst (eval (Div (Rango 2 10) (Rango 2 10)) genFijo) ~?= 1.0,
+      fst (eval (Div (Rango 2 10) (Const 2)) (genNormalConSemilla 10)) ~?= 2.178496,
+      fst (eval (Div (Rango 2 10) (Const 2)) (genNormalConSemilla 20)) ~?= 2.9627423
     ]
 
 testsArmarHistograma :: Test
