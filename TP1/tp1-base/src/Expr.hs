@@ -11,8 +11,8 @@ where
 
 import Generador
 import Histograma
-import Data.Data (ConstrRep(FloatConstr))
-import GHC.Exception (fromCallSiteList)
+
+
 
 -- | Expresiones aritméticas con rangos
 data Expr
@@ -102,48 +102,40 @@ evalHistograma casilleros muestras expr = armarHistograma casilleros muestras (e
 
 -- | Mostrar las expresiones, pero evitando algunos paréntesis innecesarios.
 -- En particular queremos evitar paréntesis en sumas y productos anidados.
-mostrar :: Expr -> String
-mostrar = recrExpr
-  (\c -> show c)                    -- Const
-  (\l u -> show l ++ "~" ++ show u) -- Rango
-  (operacion " + ")
-  (operacion " - ")
-  (operacion " * ")
-  (operacion " / ")
-  where
-    operacion string expr1 expr2 string1 string2  =
-        let izquierda  = maybeParen (necesitaParentesis (constructor expr1 , string)) string1
-            derecha = maybeParen (necesitaParentesis (constructor expr2 , string)) string2
-        in izquierda ++ string ++ derecha
 
-    necesitaParentesis:: (ConstructorExpr , String) -> Bool
-    necesitaParentesis (constructor , string) =
-        case constructor of
-        CEConst -> False
-        CERango -> False
-        CESuma -> case string of
-          " * " -> True
-          " / " -> True
-          " - " -> False
-          " + " -> False
-        CEResta -> case string of
-          " * " -> True
-          " / " -> True
-          " - " -> True
-          " + " -> False
-        CEMult -> case string of
-          " * " -> False
-          " / " -> False
-          " - " -> True
-          " + " -> True
-        CEDiv -> case string of
-          " * " -> False
-          " / " -> False
-          " - " -> True
-          " + " -> True
+
+--sumaDePorcentajes :: [Casillero] -> Float
+--sumaDePorcentajes = " - " -> True
+ --         " + " -> True
 
     
+mostrar :: Expr -> String --mover where
+mostrar = recrExpr fConst fRango fSuma fResta fMult fDiv
+  where
+    fConst = show
+    fRango from to = show from ++ "~" ++ show to
 
+    fSuma = funcion CESuma " + "
+
+    fResta  = funcion CEResta " - "
+
+    fMult  = funcion CEMult " * "
+    
+    fDiv =funcion CEDiv " / "
+
+    funcion c simbolo e1 e2 s1 s2= (maybeParen (noEsExpresionSimple c e1) s1) ++ simbolo ++ (maybeParen (noEsExpresionSimple c e2) s2)
+
+
+    noEsExpresionSimple :: ConstructorExpr -> Expr -> Bool
+    noEsExpresionSimple c e  
+      | constructor e == c = False
+      | otherwise  = esConstRango e 
+    
+
+    esConstRango :: Expr -> Bool
+    esConstRango (Const _) = True
+    esConstRango (Rango _ _) = True
+    esConstRango _ = False
 
 
 data ConstructorExpr = CEConst | CERango | CESuma | CEResta | CEMult | CEDiv

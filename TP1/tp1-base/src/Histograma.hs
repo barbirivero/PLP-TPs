@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use map once" #-}
+
 -- | Un `Histograma` es una estructura de datos que permite contar cuántos valores hay en cada rango.
 -- @vacio n (a, b)@ devuelve un histograma vacío con n+2 casilleros:
 --
@@ -28,6 +27,7 @@ where
 
 import Util
 import Data.List (zipWith4)
+import Data.ByteString (length)
 data Histograma = Histograma Float Float [Int]
   deriving (Show, Eq)
 
@@ -40,13 +40,10 @@ vacio casilleros (rangoInferior, rangoSuperior) = Histograma rangoInferior ((ran
 -- | Agrega un valor al histograma.
 agregar :: Float -> Histograma -> Histograma
 --agregar x (Histograma l tamaño ys) = Histograma l tamaño (actualizarElem (floor (x/ (fromIntegral(length ys) * tamaño)+1)) (+1) ys)
-agregar valor (Histograma rangoInferior tam ys)
-  | valor < rangoInferior = Histograma rangoInferior tam (actualizarElem 0 (+1) ys)
-  | valor >= rangoInferior + tam * fromIntegral (length ys - 2) = Histograma rangoInferior tam (actualizarElem (length ys - 1) (+1) ys)
-  | otherwise = 
-      let idx = 1 + floor ((valor - rangoInferior) / tam)
-      in Histograma rangoInferior tam (actualizarElem idx (+1) ys)
+agregar valor (Histograma rangoInferior tam ys) = Histograma rangoInferior tam idx (+1) ys
+  where idx = min (length ys-1) max ((1 + floor ((valor - rangoInferior) / tam)) 0) 
 
+--calcular idx con where y | y usar actualizarHistograma una sola vez
 
 -- | Arma un histograma a partir de una lista de números reales con la cantidad de casilleros y rango indicados.
 histograma :: Int -> (Float, Float) -> [Float] -> Histograma
@@ -88,3 +85,13 @@ porcentajes _ xs = if sum xs == 0
 
 casilleros :: Histograma -> [Casillero]
 casilleros (Histograma inicio rango xs) = zipWith4 Casillero (minimos (inicio,inicio+rango) xs) (maximos (inicio,inicio+rango) xs) xs (porcentajes (inicio,inicio+rango) xs)
+
+
+--minimos (rangoInferior,rangoSuperior) xs = seleccion (rangoInferior,rangoSuperior) xs infinitoNegativo rangoInferior [] 2
+
+--maximos (rangoInferior,rangoSuperior) xs = seleccion (rangoInferior,rangoSuperior) xs rangoInferior rangoSuperior [infinitoPositivo] 3
+
+--seleccion (rangoInferior,rangoSuperior) xs primerElemento ultimoElemento indice = primerElemento:[ (fromIntegral x*(rangoSuperior-rangoInferior))+ rangoInferior | x <- [0..length xs - indice]] ++ ultimoElemento
+
+
+--hacer lista con los limites intermedios y agregarle -inf y +inf. 
