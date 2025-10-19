@@ -27,8 +27,6 @@ sumaDePorcentajes = sum . map casPorcentaje
 unCasilleroConTodo :: [Casillero] -> Bool
 unCasilleroConTodo cs = length (filter (\c -> casPorcentaje c == 100.0) cs) == 1
 
-listaDeNumerosEnExpresion :: Expr -> [Float]
-listaDeNumerosEnExpresion = foldExpr (\x -> [x]) (\_ _ -> []) (++) (++) (++) (++)
 
 allTests :: Test
 allTests =
@@ -167,42 +165,70 @@ testsRecr =
       mult2y3 = Mult (Const 2.0) (Const 3.0)
       div6y3 = Div (Const 6.0) (Const 3.0)
 
-      fRangoNula = (\_ _ -> 0)
-      fSuma = (\_ _ x y -> x + y)
-      fResta = (\_ _ x y -> x - y)
-      fMulti = (\_ _ x y -> x * y)
-      fDiv = (\_ _ x y -> x / y)
+      multRango2A6Const6 = Mult (Rango 2 6) (Const 6.0)
+      multDeRangos4A10 = Mult (Rango 4 10) (Rango 4 10)
+
+      fRangoNula _ _ = 0
+      fRangoMinimo x _ = x
+      fRangoMaximo _ y = y
+      fRangoPromedio x y = (x + y) / 2
+
+      fSuma _ _ x y = x + y
+      --fsuma = (\_ _ x y -> x + y)
+      fResta _ _ x y = x - y
+      fMulti _ _ x y = x * y
+      fDiv _ _ x y = x / y
+
 
       fSumaConRec ex ey x y = fst (eval ex (genNormalConSemilla 0)) + fst (eval ey (genNormalConSemilla 0)) + x + y
       fRestaConRec ex ey x y = fst (eval ex (genNormalConSemilla 0)) - fst (eval ey (genNormalConSemilla 0)) + x - y
       fMultiConRec ex ey x y = fst (eval ex (genNormalConSemilla 0)) * fst (eval ey (genNormalConSemilla 0)) + x * y
       fDivConRec ex ey x y = fst (eval ex (genNormalConSemilla 0)) / fst (eval ey (genNormalConSemilla 0)) + x / y
 
+      evaluarConRangoA0 = recrExpr id fRangoNula fSuma fResta fMulti fDiv
+      evaluarConRangoMinimo = recrExpr id fRangoMinimo fSuma fResta fMulti fDiv
+      evaluarConRangoMaximo = recrExpr id fRangoMaximo fSuma fResta fMulti fDiv
+      evaluarConRangoPromedio = recrExpr id fRangoPromedio fSuma fResta fMulti fDiv
+
+      evaluarSumaRestaInvertida = recrExpr id fRangoNula fResta fSuma fMulti fDiv
+      evaluarMultDivInvertida = recrExpr id fRangoNula fSuma fResta fDiv fMulti
+
+      evaluarConSumaEnRec = recrExpr id fRangoNula fSumaConRec fResta fMulti fDiv
+      evaluarConRestaEnRec = recrExpr id fRangoNula fSuma fRestaConRec fMulti fDiv
+      evaluarConMultiEnRec = recrExpr id fRangoNula fSuma fResta fMultiConRec fDiv
+      evaluarConDivEnRec = recrExpr id fRangoNula fSuma fResta fMulti fDivConRec
 
    in
   test
     [
-    recrExpr id fRangoNula fSuma fResta fMulti fDiv (sumaUnoA mult2y3) ~?= 7.0,
-    recrExpr id fRangoNula fSuma fResta fMulti fDiv (restaUnoA mult2y3) ~?= -5.0,
-    recrExpr id fRangoNula fSuma fResta fMulti fDiv mult2y3 ~?= 6.0,
-    recrExpr id fRangoNula fSuma fResta fMulti fDiv div6y3 ~?= 2.0,
+    evaluarConRangoA0 (sumaUnoA mult2y3) ~?= 7.0,
+    evaluarConRangoA0 (restaUnoA mult2y3) ~?= -5.0,
+    evaluarConRangoA0 mult2y3 ~?= 6.0,
+    evaluarConRangoA0 div6y3 ~?= 2.0,
 
     --Rango
-    recrExpr id (\x _ -> x) fSuma fResta fMulti fDiv (Mult (Rango 2 6) (Const 6.0)) ~?= 12.0,
-    recrExpr id (\_ y -> y) fSuma fResta fMulti fDiv (Mult (Rango 2 6) (Const 6.0)) ~?= 36.0,
-    recrExpr id (\x y -> (x + y) / 2) fSuma fResta fMulti fDiv (Mult (Rango 2 6) (Const 6.0)) ~?= 24.0,
+    evaluarConRangoMinimo multRango2A6Const6 ~?= 12.0,
+    evaluarConRangoMinimo multDeRangos4A10 ~?= 16.0,
+    evaluarConRangoMaximo multRango2A6Const6 ~?= 36.0,
+    evaluarConRangoMaximo multDeRangos4A10 ~?= 100.0,
+    evaluarConRangoPromedio multRango2A6Const6 ~?= 24.0,
+    evaluarConRangoPromedio multDeRangos4A10 ~?= 49.0,
 
     -- Invertidos
-    recrExpr id (\_ _ -> 0) fResta fSuma fMulti fDiv (sumaUnoA mult2y3) ~?= -5.0,
-    recrExpr id (\_ _ -> 0) fResta fSuma fMulti fDiv (restaUnoA mult2y3) ~?= 7.0,
-    recrExpr id (\_ _ -> 0) fSuma fResta fDiv fMulti mult2y3 ~?= 0.6666667,
-    recrExpr id (\_ _ -> 0) fSuma fResta fDiv fMulti div6y3 ~?= 18.0,
+    evaluarSumaRestaInvertida (sumaUnoA mult2y3) ~?= -5.0,
+    evaluarSumaRestaInvertida (restaUnoA mult2y3) ~?= 7.0,
+    evaluarMultDivInvertida mult2y3 ~?= 0.6666667,
+    evaluarMultDivInvertida div6y3 ~?= 18.0,
 
     -- Usando el cuerpo de la recursión para obtener la suma de las cuentas
-    recrExpr id (\_ _ -> 0) fSumaConRec fResta fMulti fDiv (sumaUnoA mult2y3) ~?= 14.0,
-    recrExpr id (\_ _ -> 0) fSuma fRestaConRec fMulti fDiv (restaUnoA mult2y3) ~?= -10.0,
-    recrExpr id (\_ _ -> 0) fSuma fResta fMultiConRec fDiv mult2y3 ~?= 12.0,
-    recrExpr id (\_ _ -> 0) fSuma fResta fMulti fDivConRec div6y3 ~?= 4.0
+    evaluarConSumaEnRec (sumaUnoA mult2y3) ~?= 14.0,
+    evaluarConSumaEnRec (sumaUnoA (sumaUnoA mult2y3)) ~?= 23.0,
+    evaluarConRestaEnRec (restaUnoA mult2y3) ~?= -10.0,
+    evaluarConRestaEnRec (restaUnoA (restaUnoA mult2y3)) ~?= 17.0,
+    evaluarConMultiEnRec mult2y3 ~?= 12.0,
+    evaluarConMultiEnRec (Mult mult2y3 (Const 2)) ~?= 36.0,
+    evaluarConDivEnRec div6y3 ~?= 4.0,
+    evaluarConDivEnRec (Div div6y3 (Const 2)) ~?= 3.0
     ]
 
 testsFold :: Test
@@ -212,26 +238,40 @@ testsFold =
       mult2y3 = Mult (Const 2.0) (Const 3.0)
       div6y3 = Div (Const 6.0) (Const 3.0)
 
+      multRango2A6Const6 = Mult (Rango 2 6) (Const 6.0)
+      multDeRangos4A10 = Mult (Rango 4 10) (Rango 4 10)
 
+      evaluarConRangoA0 = foldExpr id (\_ _ -> 0) (+) (-) (*) (/)
+      evaluarConRangoMinimo = foldExpr id (\x _ -> x) (+) (-) (*) (/)
+      evaluarConRangoMaximo = foldExpr id (\_ y -> y) (+) (-) (*) (/)
+      evaluarConRangoPromedio = foldExpr id (\x y -> (x + y) / 2) (+) (-) (*) (/)
+
+      evaluarSumaRestaInvertida = foldExpr id (\_ _ -> 0) (-) (+) (*) (/)
+      evaluarMultDivInvertida = foldExpr id (\_ _ -> 0) (+) (-) (/) (*)
+
+      listaDeNumerosEnExpresion = foldExpr (: []) (\_ _ -> []) (++) (++) (++) (++)
 
    in
   test
     [
-    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) (sumaUnoA mult2y3) ~?= 7.0,
-    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) (restaUnoA mult2y3) ~?= -5.0,
-    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) mult2y3 ~?= 6.0,
-    foldExpr id (\_ _ -> 0) (+) (-) (*) (/) div6y3 ~?= 2.0,
+    evaluarConRangoA0 (sumaUnoA mult2y3) ~?= 7.0,
+    evaluarConRangoA0 (restaUnoA mult2y3) ~?= -5.0,
+    evaluarConRangoA0 mult2y3 ~?= 6.0,
+    evaluarConRangoA0 div6y3 ~?= 2.0,
 
     --Rango
-    foldExpr id (\x _ -> x) (+) (-) (*) (/) (Mult (Rango 2 6) (Const 6.0)) ~?= 12.0,
-    foldExpr id (\_ y -> y) (+) (-) (*) (/) (Mult (Rango 2 6) (Const 6.0)) ~?= 36.0,
-    foldExpr id (\x y -> (x + y) / 2) (+) (-) (*) (/) (Mult (Rango 2 6) (Const 6.0)) ~?= 24.0,
+    evaluarConRangoMinimo multRango2A6Const6~?= 12.0,
+    evaluarConRangoMinimo multDeRangos4A10 ~?= 16.0,
+    evaluarConRangoMaximo multRango2A6Const6 ~?= 36.0,
+    evaluarConRangoMaximo multDeRangos4A10 ~?= 100.0,
+    evaluarConRangoPromedio multRango2A6Const6 ~?= 24.0,
+    evaluarConRangoPromedio multDeRangos4A10 ~?= 49.0,
 
     -- Invertidos
-    foldExpr id (\_ _ -> 0) (-) (+) (*) (/) (sumaUnoA mult2y3) ~?= -5.0,
-    foldExpr id (\_ _ -> 0) (-) (+) (*) (/) (restaUnoA mult2y3) ~?= 7.0,
-    foldExpr id (\_ _ -> 0) (+) (-) (/) (*) mult2y3 ~?= 0.6666667,
-    foldExpr id (\_ _ -> 0) (+) (-) (/) (*) div6y3 ~?= 18.0,
+    evaluarSumaRestaInvertida (sumaUnoA mult2y3) ~?= -5.0,
+    evaluarSumaRestaInvertida (restaUnoA mult2y3) ~?= 7.0,
+    evaluarMultDivInvertida mult2y3 ~?= 0.6666667,
+    evaluarMultDivInvertida div6y3 ~?= 18.0,
 
     listaDeNumerosEnExpresion (restaUnoA div6y3) ~?= [1.0,6.0,3.0],
     listaDeNumerosEnExpresion (sumaUnoA (Suma (Const 2) (Const 3))) ~?= [1.0,2.0,3.0]
@@ -258,7 +298,7 @@ testsEval =
       fst (eval (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 0)) ~?= 3.7980492,
       fst (eval (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 10)) ~?= 3.178496,
       fst (eval (Suma (Rango 1 5) (Const 1)) (genNormalConSemilla 20)) ~?= 3.9627423,
-      
+
 
       fst (eval (Resta (Rango 1 5) (Const 1)) genFijo) ~?= 2.0,
       fst (eval (Resta (Const 1) (Rango 1 5)) genFijo) ~?= -2.0,

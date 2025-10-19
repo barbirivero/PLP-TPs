@@ -27,7 +27,7 @@ where
 
 import Util
 import Data.List (zipWith4)
-import Data.ByteString (length)
+
 data Histograma = Histograma Float Float [Int]
   deriving (Show, Eq)
 
@@ -39,9 +39,8 @@ vacio casilleros (rangoInferior, rangoSuperior) = Histograma rangoInferior ((ran
 
 -- | Agrega un valor al histograma.
 agregar :: Float -> Histograma -> Histograma
---agregar x (Histograma l tamaño ys) = Histograma l tamaño (actualizarElem (floor (x/ (fromIntegral(length ys) * tamaño)+1)) (+1) ys)
-agregar valor (Histograma rangoInferior tam ys) = Histograma rangoInferior tam idx (+1) ys
-  where idx = min (length ys-1) max ((1 + floor ((valor - rangoInferior) / tam)) 0) 
+agregar valor (Histograma rangoInferior tam ys) = Histograma rangoInferior tam (actualizarElem idx (+1) ys)
+  where idx = min (length ys -1) (max (1 + floor ((valor - rangoInferior) / tam)) 0) 
 
 --calcular idx con where y | y usar actualizarHistograma una sola vez
 
@@ -73,10 +72,13 @@ casPorcentaje (Casillero _ _ _ p) = p
 -- | Dado un histograma, devuelve la lista de casilleros con sus límites, cantidad y porcentaje.
 
 minimos :: (Float,Float) -> [Int] -> [Float]
-minimos (rangoInferior,rangoSuperior) xs = infinitoNegativo:[ (fromIntegral x*(rangoSuperior-rangoInferior))+ rangoInferior | x <- [0..length xs - 2]]
+minimos (rangoInferior,rangoSuperior) xs = infinitoNegativo : armarLimites (rangoInferior,rangoSuperior) xs
 
 maximos :: (Float,Float) -> [Int] -> [Float]
-maximos (rangoInferior,rangoSuperior) xs = rangoInferior :[ (fromIntegral x*(rangoSuperior-rangoInferior))+ rangoSuperior | x <- [0..length xs - 3]] ++ [infinitoPositivo]
+maximos (rangoInferior,rangoSuperior) xs = armarLimites (rangoInferior,rangoSuperior) xs ++ [infinitoPositivo]
+
+armarLimites :: (Float,Float) -> [Int] -> [Float]
+armarLimites (rangoInferior,rangoSuperior) xs = rangoInferior :[(fromIntegral x*(rangoSuperior-rangoInferior)) + rangoSuperior | x <- [0..length xs -3]]
 
 porcentajes:: (Float,Float) -> [Int] -> [Float]
 porcentajes _ xs = if sum xs == 0
@@ -85,13 +87,3 @@ porcentajes _ xs = if sum xs == 0
 
 casilleros :: Histograma -> [Casillero]
 casilleros (Histograma inicio rango xs) = zipWith4 Casillero (minimos (inicio,inicio+rango) xs) (maximos (inicio,inicio+rango) xs) xs (porcentajes (inicio,inicio+rango) xs)
-
-
---minimos (rangoInferior,rangoSuperior) xs = seleccion (rangoInferior,rangoSuperior) xs infinitoNegativo rangoInferior [] 2
-
---maximos (rangoInferior,rangoSuperior) xs = seleccion (rangoInferior,rangoSuperior) xs rangoInferior rangoSuperior [infinitoPositivo] 3
-
---seleccion (rangoInferior,rangoSuperior) xs primerElemento ultimoElemento indice = primerElemento:[ (fromIntegral x*(rangoSuperior-rangoInferior))+ rangoInferior | x <- [0..length xs - indice]] ++ ultimoElemento
-
-
---hacer lista con los limites intermedios y agregarle -inf y +inf. 
