@@ -34,6 +34,8 @@ Para hacer el paso inductivo tomo como Hipótesis inductiva a:
 - $"P"(a$): $"cantLit "a = "S(cantOp "a")"$
 - $"P"(b$): $"cantLit "b = "S(cantOp "b")"$
 
+Quiero probar que $forall a:: "Expr."$$forall b:: "Expr."$ $"P"(a) and "P"(b) => "P"("Suma" a" "b )   $ 
+
 #underline[Paso inductivo:] $"P(Suma a b")$
 
 #align(center)[ 
