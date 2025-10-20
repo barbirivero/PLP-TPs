@@ -114,23 +114,20 @@ mostrar = recrExpr fConst fRango fSuma fResta fMult fDiv
   where
     fConst = show
     fRango from to = show from ++ "~" ++ show to
+    fSuma = mostrarFunc CESuma " + "
+    fResta  = mostrarFunc CEResta " - "
+    fMult  = mostrarFunc CEMult " * "
+    fDiv =mostrarFunc CEDiv " / "
 
-    fSuma = funcion CESuma " + "
-
-    fResta  = funcion CEResta " - "
-
-    fMult  = funcion CEMult " * "
-    
-    fDiv =funcion CEDiv " / "
-
-    funcion c simbolo e1 e2 s1 s2= (maybeParen (noEsExpresionSimple c e1) s1) ++ simbolo ++ (maybeParen (noEsExpresionSimple c e2) s2)
-
+    mostrarFunc c simbolo e1 e2 s1 s2 = (maybeParen ((noEsExpresionSimple c e1)|| restaDeResta c e1) s1) ++ simbolo ++ (maybeParen ((noEsExpresionSimple c e2) || restaDeResta c e2) s2)
 
     noEsExpresionSimple :: ConstructorExpr -> Expr -> Bool
     noEsExpresionSimple c e  
       | constructor e == c = False
-      | otherwise  = esConstRango e 
+      | otherwise  = not (esConstRango e) 
     
+    restaDeResta :: ConstructorExpr -> Expr -> Bool
+    restaDeResta c e = constructor e == CEResta && c == CEResta
 
     esConstRango :: Expr -> Bool
     esConstRango (Const _) = True
