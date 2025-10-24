@@ -108,31 +108,35 @@ evalHistograma casilleros muestras expr = armarHistograma casilleros muestras (e
 --sumaDePorcentajes = " - " -> True
  --         " + " -> True
 
-    
-mostrar :: Expr -> String --mover where
-mostrar = recrExpr fConst fRango fSuma fResta fMult fDiv
-  where
-    fConst = show
-    fRango from to = show from ++ "~" ++ show to
-    fSuma = mostrarFunc CESuma " + "
-    fResta  = mostrarFunc CEResta " - "
-    fMult  = mostrarFunc CEMult " * "
-    fDiv =mostrarFunc CEDiv " / "
 
-    mostrarFunc c simbolo e1 e2 s1 s2 = (maybeParen ((noEsExpresionSimple c e1)|| restaDeResta c e1) s1) ++ simbolo ++ (maybeParen ((noEsExpresionSimple c e2) || restaDeResta c e2) s2)
+mostrar :: Expr -> String --mover where
+mostrar = recrExpr
+    (show)
+    (\from to -> show from ++ "~" ++ show to)
+    (mostrarFunc CESuma " + ")
+    (mostrarFunc CEResta " - ")
+    (mostrarFunc CEMult " * ")
+    (mostrarFunc CEDiv " / ")
+
+  where
+    mostrarFunc constr simbolo expr1 expr2 s1 s2 = hayParentesisRedundantes constr expr1 s1 ++ simbolo ++ hayParentesisRedundantes constr expr2 s2
 
     noEsExpresionSimple :: ConstructorExpr -> Expr -> Bool
-    noEsExpresionSimple c e  
-      | constructor e == c = False
-      | otherwise  = not (esConstRango e) 
-    
-    restaDeResta :: ConstructorExpr -> Expr -> Bool
-    restaDeResta c e = constructor e == CEResta && c == CEResta
+    noEsExpresionSimple constr expr
+      | constructor expr == constr = False
+      | otherwise  = not (esConstRango expr)
+
+    casoConPrecedencia :: ConstructorExpr -> Expr -> Bool
+    casoConPrecedencia constr expr
+      | CEResta == constr = constructor expr == CEResta && constr == CEResta
+      | otherwise = constructor expr == CEDiv && constr == CEDiv
 
     esConstRango :: Expr -> Bool
     esConstRango (Const _) = True
     esConstRango (Rango _ _) = True
     esConstRango _ = False
+
+    hayParentesisRedundantes constr expr = maybeParen (noEsExpresionSimple constr expr || casoConPrecedencia constr expr)
 
 
 data ConstructorExpr = CEConst | CERango | CESuma | CEResta | CEMult | CEDiv

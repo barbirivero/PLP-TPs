@@ -8,8 +8,6 @@ import Generador
 import Histograma
 import Test.HUnit
 import Util
-import System.Random (genByteString)
-import GHC.Read (list)
 
 main :: IO ()
 main = runTestTTAndExit allTests
@@ -456,7 +454,9 @@ testsMostrar =
       mostrar (Suma (Mult (Suma (Const 1) (Const 2)) (Const 3)) (Const 4))
         ~?= "((1.0 + 2.0) * 3.0) + 4.0",
       mostrar (Mult (Suma (Suma (Const 1) (Const 2)) (Const 3)) (Const 4))
-        ~?= "(1.0 + 2.0 + 3.0) * 4.0"
+        ~?= "(1.0 + 2.0 + 3.0) * 4.0",
+        mostrar (Mult (Div (Div (Const 1) (Const 2)) (Const 3)) (Const 4))
+        ~?= "((1.0 / 2.0) / 3.0) * 4.0"
     ]
 
 testsMostrarFloat :: Test
