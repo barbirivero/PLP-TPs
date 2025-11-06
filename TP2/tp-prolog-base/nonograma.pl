@@ -18,24 +18,24 @@ replicar(Elemento, N, [Elemento|Tail]) :-
 %Ejercicio 3
 %transponer(+M, -MT)
 transponer([], []).
-transponer(Matriz, MatrizTranspuesta):-
-	length(Matriz, Filas),
-	nth1(1, Matriz, Fila),
-	length(Fila,Columnas),
-	filasSonColumna(Matriz,MatrizTranspuesta,1),
-	matriz(Columnas,Filas,MatrizTranspuesta).
+transponer([[]|_], []).
+transponer(Matriz, [Columna|RestoTranspuesta]):-
+	sacarPrimerColumna(Matriz, Columna, RestoMatriz),
+    transponer(RestoMatriz, RestoTranspuesta).
 
-filasSonColumna([],_,_).
-filasSonColumna([Fila1|TailFilas],MatrizTranspuesta,Idx):-
-	IdxNext is Idx + 1,
-	verColumna(Fila1,MatrizTranspuesta,Idx),
-	filasSonColumna(TailFilas,MatrizTranspuesta,IdxNext).
+%sacarPrimerColumna(?M, ?C, ?R)
+sacarPrimerColumna(Matriz, Columna, Resto) :-
+    maplist(listaComp, Matriz, Columna, Resto).
 
-verColumna([],[],_).
-verColumna([Head|Tail],[Fila1|TailFilas],Idx):-
-	nth1(Idx, Fila1, Head),
-	verColumna(Tail,TailFilas,Idx).
+%listaComp(?L, ?X, ?XS)
+listaComp([X|XS], X, XS).
 
+/*
+%sacarPrimerColumna(+M, -C, -MR)
+sacarPrimerColumna([], [], []).
+sacarPrimerColumna([[X|XS]|FilasRestantes], [X|ColumnaTail], [XS|MatrizRestante]):-
+	sacarPrimerColumna(FilasRestantes, ColumnaTail, MatrizRestante).
+*/
 
 % Predicado dado armarNono/3
 armarNono(RF, RC, nono(M, RS)) :-
@@ -51,66 +51,79 @@ zipR([], [], []).
 zipR([R|RT], [L|LT], [r(R,L)|T]) :- zipR(RT, LT, T).
 
 % Ejercicio 4
-%pintadasValidas(_) :- completar("Ejercicio 4").
-pintadasValidas(r(RestriccionesDePintadas, Celdas)):-
-	length(RestriccionesDePintadas,RestriccionesPintadasLength),
+%pintadasValidas(+R)
+pintadasValidas(r(RestricPintadas, Celdas)):-
+	crearResticcionesDeBlancas(RestricPintadas, Celdas, RestriccBlancas),
+	restriccionesValidas(RestriccBlancas),
+	pintarFila(RestriccBlancas, RestricPintadas, Celdas).
+
+%crearResticcionesDeBlancas(+RP, +C, -RB):-
+crearResticcionesDeBlancas(RPintadas, Celdas, RBlancas):-
+	length(RPintadas,CantRestriccionesPintadas),
+	CantRestriccionesBlancas is CantRestriccionesPintadas + 1,
 	length(Celdas,Size),
-	sum_list(RestriccionesDePintadas,CantPintadas),
+	sum_list(RPintadas,CantPintadas),
 	CantBlancas is Size - CantPintadas,
-	RestriccionesBlancasLength is RestriccionesPintadasLength + 1,
-	%length(RestriccionesDeBlancas,RestriccionesBlancasLength),
+	generarListaQueSuma(CantRestriccionesBlancas, CantBlancas, RBlancas).
 
-	generarListaQueSuma(RestriccionesBlancasLength, CantBlancas, RestriccionesDeBlancas),
-	restriccionesValidas(RestriccionesDeBlancas),
-	generarPintada(RestriccionesDeBlancas, RestriccionesDePintadas, Celdas).
-
-generarListaQueSuma(0, 0, []).  % Caso base: 0 elementos suman 0
-generarListaQueSuma(1, Suma, [Suma]).
-generarListaQueSuma(N, Suma, [Head|Tail]) :-
-    N > 1,
+%generarListaQueSuma(+N,+S,?L). 
+generarListaQueSuma(0, 0, []). 
+generarListaQueSuma(N, Suma, [X|XS]) :-
+    N > 0,
     N1 is N - 1,
-    between(0,Suma, Head),
-    Resto is Suma - Head,
-    generarListaQueSuma(N1, Resto, Tail).
-
+    between(0,Suma, X),
+    Resto is Suma - X,
+    generarListaQueSuma(N1, Resto, XS).
+/*
 %restriccionesValidas(+L)
 restriccionesValidas([]).
-restriccionesValidas([X]):- X>=0. %aca no estoy muy seguro
+restriccionesValidas([X]):- X>=0.
 restriccionesValidas(Lista):-
 	append([PrimerElemento | ListaAux], [UltimoElemento], Lista),
 	maplist(=<(1), ListaAux),
 	PrimerElemento >= 0,
 	UltimoElemento >= 0.
+*/
+%restriccionesValidas(+L)
+restriccionesValidas([]).
+restriccionesValidas([X|XS]):- X>=0, restoValido(XS).
 
-%generarPintada(+RB,+RP,-C)
-generarPintada([Ultima],[], Celdas):- replicar(o, Ultima, Celdas).
-generarPintada([HeadBlanca|TailBlanca], [HeadPintada|TailPintada], Celdas):-
-	replicar(o, HeadBlanca, ListaBlanca),
-	replicar(x, HeadPintada, ListaPintada),
+%restoValido(+L)
+restoValido([]).
+restoValido([X]):- X>=0.
+restoValido([X1, X2|XS]):- X1 >= 1, restoValido([X2|XS]).
+
+%pintarFila(+RB,+RP,-C)
+pintarFila([Ultima],[], Celdas):- 
+	replicar(o, Ultima, Celdas).
+pintarFila([CantBlancas|ResBlanca], [CantPintadas|ResPintada], Celdas):-
+	replicar(o, CantBlancas, ListaBlanca),
+	replicar(x, CantPintadas, ListaPintada),
 	append(ListaBlanca, ListaPintada, Segmento),
 	append(Segmento, Resto, Celdas),
-	generarPintada(TailBlanca, TailPintada, Resto).
-	
+	pintarFila(ResBlanca, ResPintada, Resto).
 
 % Ejercicio 5
-%resolverNaive(nono(M,RS)) :-
-%	maplist(pintadasValidas, RS).
+resolverNaive(nono(_,RS)) :-
+	maplist(pintadasValidas, RS).
+
+/*
 resolverNaive(nono(_, [])).
 resolverNaive(nono(M, [R|RS])) :-
     pintadasValidas(R),
     resolverNaive(nono(M, RS)).
-
+*/
 
 % Ejercicio 6
 pintarObligatorias(r(Restricciones, Celdas)) :-
     findall(Pintada, 
-            generarPintadaCompatible(Restricciones, Celdas, Pintada),
+            pintarFilaCompatible(Restricciones, Celdas, Pintada),
             TodasLasPintadas),
     TodasLasPintadas \= [],
     combinarTodasYUnificar(TodasLasPintadas, Celdas).
 
 % Genera pintadas compatibles con las celdas actuales
-generarPintadaCompatible(Restricciones, Celdas, Pintada) :-
+pintarFilaCompatible(Restricciones, Celdas, Pintada) :-
     copy_term(Celdas, Pintada),
     pintadasValidas(r(Restricciones, Pintada)).
 
