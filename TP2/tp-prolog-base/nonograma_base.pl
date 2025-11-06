@@ -1,41 +1,13 @@
-%Ejercicio 1
-%matriz(+Filas, +Columnas ?Matriz)
-matriz(0, _, []).
-matriz(Filas, Columnas, [Head|Tail]):-
-	Filas > 0,
-	F1 is Filas-1,
-	length(Head, Columnas),
-	matriz(F1, Columnas, Tail).
 
-%Ejercicio 2
-%replicar(+Elem, +N ?Lista)
-replicar(_, 0, []).
-replicar(Elemento, N, [Elemento|Tail]) :-
-	N > 0,
-	N1 is N - 1,
-	replicar(Elemento, N1, Tail).
 
-%Ejercicio 3
-%transponer(+M, -MT)
-transponer([], []).
-transponer([[]|_], []).
-transponer(Matriz, [Columna|RestoTranspuesta]):-
-	sacarPrimerColumna(Matriz, Columna, RestoMatriz),
-    transponer(RestoMatriz, RestoTranspuesta).
+% Ejercicio 1
+matriz(F, C, M) :- completar("Ejercicio 1").
 
-%sacarPrimerColumna(?M, ?C, ?R)
-sacarPrimerColumna(Matriz, Columna, Resto) :-
-    maplist(listaComp, Matriz, Columna, Resto).
+% Ejercicio 2
+replicar(X, N, L) :- completar("Ejercicio 2").
 
-%listaComp(?L, ?X, ?XS)
-listaComp([X|XS], X, XS).
-
-/*
-%sacarPrimerColumna(+M, -C, -MR)
-sacarPrimerColumna([], [], []).
-sacarPrimerColumna([[X|XS]|FilasRestantes], [X|ColumnaTail], [XS|MatrizRestante]):-
-	sacarPrimerColumna(FilasRestantes, ColumnaTail, MatrizRestante).
-*/
+% Ejercicio 3
+transponer(_, _) :- completar("Ejercicio 3").
 
 % Predicado dado armarNono/3
 armarNono(RF, RC, nono(M, RS)) :-
@@ -51,90 +23,13 @@ zipR([], [], []).
 zipR([R|RT], [L|LT], [r(R,L)|T]) :- zipR(RT, LT, T).
 
 % Ejercicio 4
-%pintadasValidas(+R)
-pintadasValidas(r(RestricPintadas, Celdas)):-
-	crearResticcionesDeBlancas(RestricPintadas, Celdas, RestriccBlancas),
-	restriccionesValidas(RestriccBlancas),
-	pintarFila(RestriccBlancas, RestricPintadas, Celdas).
-
-%crearResticcionesDeBlancas(+RP, +C, -RB):-
-crearResticcionesDeBlancas(RPintadas, Celdas, RBlancas):-
-	length(RPintadas,CantRestriccionesPintadas),
-	CantRestriccionesBlancas is CantRestriccionesPintadas + 1,
-	length(Celdas,Size),
-	sum_list(RPintadas,CantPintadas),
-	CantBlancas is Size - CantPintadas,
-	generarListaQueSuma(CantRestriccionesBlancas, CantBlancas, RBlancas).
-
-%generarListaQueSuma(+N,+S,?L). 
-generarListaQueSuma(0, 0, []). 
-generarListaQueSuma(N, Suma, [X|XS]) :-
-    N > 0,
-    N1 is N - 1,
-    between(0,Suma, X),
-    Resto is Suma - X,
-    generarListaQueSuma(N1, Resto, XS).
-/*
-%restriccionesValidas(+L)
-restriccionesValidas([]).
-restriccionesValidas([X]):- X>=0.
-restriccionesValidas(Lista):-
-	append([PrimerElemento | ListaAux], [UltimoElemento], Lista),
-	maplist(=<(1), ListaAux),
-	PrimerElemento >= 0,
-	UltimoElemento >= 0.
-*/
-%restriccionesValidas(+L)
-restriccionesValidas([]).
-restriccionesValidas([X|XS]):- X>=0, restoValido(XS).
-
-%restoValido(+L)
-restoValido([]).
-restoValido([X]):- X>=0.
-restoValido([X1, X2|XS]):- X1 >= 1, restoValido([X2|XS]).
-
-%pintarFila(+RB,+RP,-C)
-pintarFila([Ultima],[], Celdas):- 
-	replicar(o, Ultima, Celdas).
-pintarFila([CantBlancas|ResBlanca], [CantPintadas|ResPintada], Celdas):-
-	replicar(o, CantBlancas, ListaBlanca),
-	replicar(x, CantPintadas, ListaPintada),
-	append(ListaBlanca, ListaPintada, Segmento),
-	append(Segmento, Resto, Celdas),
-	pintarFila(ResBlanca, ResPintada, Resto).
+pintadasValidas(_) :- completar("Ejercicio 4").
 
 % Ejercicio 5
-resolverNaive(nono(_,RS)) :-
-	maplist(pintadasValidas, RS).
-
-/*
-resolverNaive(nono(_, [])).
-resolverNaive(nono(M, [R|RS])) :-
-    pintadasValidas(R),
-    resolverNaive(nono(M, RS)).
-*/
+resolverNaive(_) :-  completar("Ejercicio 5").
 
 % Ejercicio 6
-pintarObligatorias(r(Restricciones, Celdas)) :-
-    findall(Celdas, pintadasValidas(r(Restricciones, Celdas)), TodasLasPintadas),
-    TodasLasPintadas \= [], %Creo que esto se puede sacar
-    combinarTodas(TodasLasPintadas, Celdas).
-
-% combinarTodas(+Pintadas, ?Celdas)
-combinarTodas([Primera|Resto], Celdas) :-
-    combinarTodasLasPintadas(Resto, Primera, Celdas).
-
-% combinarTodasLasPintadas(+Pintadas, +Acum, -Resultado)
-combinarTodasLasPintadas([], Acum, Acum).
-combinarTodasLasPintadas([Pintada|Resto], Acum, Resultado) :-
-    combinarDosPintadas(Acum, Pintada, NuevoAcum),
-    combinarTodasLasPintadas(Resto, NuevoAcum, Resultado).
-
-% combinarDosPintadas(+P1, +P2, -Resultado)
-combinarDosPintadas([], [], []).
-combinarDosPintadas([C1|T1], [C2|T2], [R|TR]) :-
-    combinarCelda(C1, C2, R),
-    combinarDosPintadas(T1, T2, TR).
+pintarObligatorias(_) :- completar("Ejercicio 6").
 
 % Predicado dado combinarCelda/3
 combinarCelda(A, B, _) :- var(A), var(B).
@@ -144,8 +39,7 @@ combinarCelda(A, B, A) :- nonvar(A), nonvar(B), A = B.
 combinarCelda(A, B, _) :- nonvar(A), nonvar(B), A \== B.
 
 % Ejercicio 7
-deducir1Pasada(nono(_,[])).
-deducir1Pasada(nono(M,[H|T])) :- pintarObligatorias(H), deducir1Pasada(nono(M,T)).
+deducir1Pasada(_) :- completar("Ejercicio 7").
 
 % Predicado dado
 cantidadVariablesLibres(T, N) :- term_variables(T, LV), length(LV, N).
@@ -159,32 +53,17 @@ deducirVariasPasadas(NN) :-
 	deducirVariasPasadasCont(NN, VI, VF).
 
 % Predicado dado
-deducirVariasPasadasCont(_, A, A). % Si VI = VF entonces no hubo mas cambios y frenamos.
+deducirVariasPasadasCont(_, A, A). % Si VI = VF entonces no hubo más cambios y frenamos.
 deducirVariasPasadasCont(NN, A, B) :- A =\= B, deducirVariasPasadas(NN).
 
 % Ejercicio 8
-
-restriccionConMenosLibres(nono(_, Rs), R) :- 
-    member(R, Rs),
-    cantidadVariablesLibres(R, N),
-    N > 0,
-    not((member(R2, Rs), 
-         cantidadVariablesLibres(R2, N2), 
-         N2 > 0, 
-         N2 < N)).
+restriccionConMenosLibres(_, _) :- completar("Ejercicio 8").
 
 % Ejercicio 9
-resolverDeduciendo(NN) :-
-    deducirVariasPasadas(NN),
-    cantidadVariablesLibres(NN, 0), !.
+resolverDeduciendo(NN) :- completar("Ejercicio 9").
 
-resolverDeduciendo(NN) :-
-    restriccionConMenosLibres(NN, R), !,
-    pintadasValidas(R),
-    resolverDeduciendo(NN).
-
-solucionUnica(nono(M, RS)) :-
-    findall(M, resolverDeduciendo(nono(M, RS)), [_]).
+% Ejercicio 10
+solucionUnica(NN) :- completar("Ejercicio 10").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                              %
