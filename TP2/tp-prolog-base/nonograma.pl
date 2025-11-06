@@ -116,21 +116,13 @@ resolverNaive(nono(M, [R|RS])) :-
 
 % Ejercicio 6
 pintarObligatorias(r(Restricciones, Celdas)) :-
-    findall(Pintada, 
-            pintarFilaCompatible(Restricciones, Celdas, Pintada),
-            TodasLasPintadas),
-    TodasLasPintadas \= [],
-    combinarTodasYUnificar(TodasLasPintadas, Celdas).
+    findall(Celdas, pintadasValidas(r(Restricciones, Celdas)), TodasLasPintadas),
+    TodasLasPintadas \= [], %Creo que esto se puede sacar
+    combinarTodas(TodasLasPintadas, Celdas).
 
-% Genera pintadas compatibles con las celdas actuales
-pintarFilaCompatible(Restricciones, Celdas, Pintada) :-
-    copy_term(Celdas, Pintada),
-    pintadasValidas(r(Restricciones, Pintada)).
-
-% combinarTodasYUnificar(+Pintadas, ?Celdas)
-combinarTodasYUnificar([Primera|Resto], Celdas) :-
-    combinarTodasLasPintadas(Resto, Primera, Resultado),
-    Resultado = Celdas.
+% combinarTodas(+Pintadas, ?Celdas)
+combinarTodas([Primera|Resto], Celdas) :-
+    combinarTodasLasPintadas(Resto, Primera, Celdas).
 
 % combinarTodasLasPintadas(+Pintadas, +Acum, -Resultado)
 combinarTodasLasPintadas([], Acum, Acum).
