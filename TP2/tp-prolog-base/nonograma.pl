@@ -159,6 +159,7 @@ resolverDeduciendo(NN) :-
     pintadasValidas(R),
     resolverDeduciendo(NN).
 
+% Ejercicio 10
 solucionUnica(nono(M, RS)) :-
     findall(M, resolverDeduciendo(nono(M, RS)), [_]).
 
