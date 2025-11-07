@@ -241,3 +241,31 @@ mostrarFila(Fila) :-
 mostrarCelda(C) :- nonvar(C), C = x, write('██').
 mostrarCelda(C) :- nonvar(C), C = o, write('░░').
 mostrarCelda(C) :- var(C), write('¿?').
+
+
+%------%
+/*
+Ejercicio 11: Es reversible %replicar(+Elem, +N ?Lista) en el segundo Parametro?
+No, ya que hay clausulas con operacion aritmeticas que necesitan que los argumentos esten instanciadas, en particular ">" y "is", y ambas usan N.
+
+
+Ejercicio 12
+
+0  | 2x3   | Si | Si
+1  | 5x5   | Si | Si
+2  | 5x5   | Si | Si
+3  | 10x10 | Si | Si
+4  | 5x5   | Si | Si
+5  | 5x5   | Si | No
+6  | 5x5   | Si | Si
+7  | 10x10 | Si | Si
+8  | 10x10 | Si | Si
+9  | 5x5   | Si | Si
+10 | 5x5   | No | No
+11 | 10x10 | Si | Si
+12 | 15x15 | Si | Si
+13 | 11x5  | -- | --
+14 | 4x4   | Si | No
+
+
+*/
