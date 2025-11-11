@@ -88,29 +88,31 @@ pintarFila([CantBlancas|ResBlanca], [CantPintadas|ResPintada], Celdas):-
 	pintarFila(ResBlanca, ResPintada, Resto).
 
 % Ejercicio 5
-resolverNaive(nono(_,RS)) :-
-	maplist(pintadasValidas, RS).
+%resolverNaive(+NN)
+resolverNaive(nono(_,Restricciones)) :-
+	maplist(pintadasValidas, Restricciones).
 
 % Ejercicio 6
+%pintarObligatorias(+R)
 pintarObligatorias(r(Restricciones, Celdas)) :-
     findall(Celdas, pintadasValidas(r(Restricciones, Celdas)), TodasLasPintadas),
     combinarTodas(TodasLasPintadas, Celdas).
 
-% combinarTodas(+Pintadas, ?Celdas)
+%combinarTodas(+Pintadas, ?Celdas)
 combinarTodas([Primera|Resto], Celdas) :-
     combinarTodasLasPintadas(Resto, Primera, Celdas).
 
-% combinarTodasLasPintadas(+Pintadas, +Acum, -Resultado)
+%combinarTodasLasPintadas(+Pintadas, +Acum, -Resultado)
 combinarTodasLasPintadas([], Acum, Acum).
 combinarTodasLasPintadas([Pintada|Resto], Acum, Resultado) :-
     combinarDosPintadas(Acum, Pintada, NuevoAcum),
     combinarTodasLasPintadas(Resto, NuevoAcum, Resultado).
 
-% combinarDosPintadas(+P1, +P2, -Resultado)
+%combinarDosPintadas(+P1, +P2, -Resultado)
 combinarDosPintadas([], [], []).
-combinarDosPintadas([C1|T1], [C2|T2], [R|TR]) :-
-    combinarCelda(C1, C2, R),
-    combinarDosPintadas(T1, T2, TR).
+combinarDosPintadas([Celda1|Tail1], [Celda2|Tail2], [Res|TailRes]) :-
+    combinarCelda(Celda1, Celda2, Res),
+    combinarDosPintadas(Tail1, Tail2, TailRes).
 
 % Predicado dado combinarCelda/3
 combinarCelda(A, B, _) :- var(A), var(B).
@@ -120,8 +122,9 @@ combinarCelda(A, B, A) :- nonvar(A), nonvar(B), A = B.
 combinarCelda(A, B, _) :- nonvar(A), nonvar(B), A \== B.
 
 % Ejercicio 7
+%deducir1Pasada(+NN)
 deducir1Pasada(nono(_,[])).
-deducir1Pasada(nono(M,[H|T])) :- pintarObligatorias(H), deducir1Pasada(nono(M,T)).
+deducir1Pasada(nono(Matriz,[Head|Tail])) :- pintarObligatorias(Head), deducir1Pasada(nono(Matriz,Tail)).
 
 % Predicado dado
 cantidadVariablesLibres(T, N) :- term_variables(T, LV), length(LV, N).
@@ -139,29 +142,31 @@ deducirVariasPasadasCont(_, A, A). % Si VI = VF entonces no hubo mas cambios y f
 deducirVariasPasadasCont(NN, A, B) :- A =\= B, deducirVariasPasadas(NN).
 
 % Ejercicio 8
-
-restriccionConMenosLibres(nono(_, Rs), R) :- 
-    member(R, Rs),
-    cantidadVariablesLibres(R, N),
-    N > 0,
-    not((member(R2, Rs), 
-         cantidadVariablesLibres(R2, N2), 
-         N2 > 0, 
-         N2 < N)).
+%restriccionConMenosLibres(+NN, -R) 
+restriccionConMenosLibres(nono(_, RS), Restriccion) :- 
+    member(Restriccion, RS),
+    cantidadVariablesLibres(Restriccion, Cantidad),
+    Cantidad > 0,
+    not((member(Restriccion2, RS), 
+         cantidadVariablesLibres(Restriccion2, Cantidad2), 
+         Cantidad2 > 0, 
+         Cantidad2 < Cantidad)).
 
 % Ejercicio 9
-resolverDeduciendo(NN) :-
-    deducirVariasPasadas(NN),
-    cantidadVariablesLibres(NN, 0), !.
+%resolverDeduciendo(+NN) 
+resolverDeduciendo(Nonograma) :-
+    deducirVariasPasadas(Nonograma),
+    cantidadVariablesLibres(Nonograma, 0), !.
 
-resolverDeduciendo(NN) :-
-    restriccionConMenosLibres(NN, R), !,
-    pintadasValidas(R),
-    resolverDeduciendo(NN).
+resolverDeduciendo(Nonograma) :-
+    restriccionConMenosLibres(Nonograma, Restriccion), !,
+    pintadasValidas(Restriccion),
+    resolverDeduciendo(Nonograma).
 
 % Ejercicio 10
-solucionUnica(nono(M, RS)) :-
-    findall(M, resolverDeduciendo(nono(M, RS)), [_]).
+%solucionUnica(+NN) 
+solucionUnica(nono(Matriz, Restricciones)) :-
+    findall(Matriz, resolverDeduciendo(nono(Matriz, Restricciones)), [_]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                              %
